@@ -10,7 +10,8 @@ import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
 import * as dat from 'dat.gui';
 import Stats from 'stats.js'
 
-
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 export default {
   data(){
     return {
@@ -23,6 +24,7 @@ export default {
   },
   mounted(){
     this.init()
+    window.addEventListener( 'click', this.onMouseClick, false );
   },
   methods:{
     init() {
@@ -33,52 +35,52 @@ export default {
       this.createFloor()
 
      //生化罐
-      this.createModel('/model/biochemicalTank.obj','/model/biochemicalTank.mtl',{x:0,y:76,z:-100,scale:0.05},'biochemicalTank')
+      this.createModel('/model/biochemicalTank.obj','/model/biochemicalTank.mtl',{x:0,y:50,z:-100,scale:0.05},'biochemicalTank')
 
       // 鼓风机
-      this.createModel('/model/gufengji.obj','/model/gufengji.mtl',{x:140,y:30,z:0,scale:0.1},'gufengji')
+      this.createModel('/model/gufengji.obj','/model/gufengji.mtl',{x:140,y:50,z:0,scale:0.1},'gufengji')
 
       //建筑
-       this.createModel('/model/jianzhu.obj','/model/jianzhu.mtl',{x:400,y:30,z:-600,scale:0.1,rotateY:Math.PI},'jianzu')
+       this.createModel('/model/jianzhu.obj','/model/jianzhu.mtl',{x:590,y:46,z:-490,scale:0.1,rotateY:Math.PI},'jianzu')
        
        setTimeout(()=>{  
        let jianzu =this.scene.getObjectByName("jianzu").clone()
-       jianzu.position.set(400,30,-250)
+       jianzu.position.set(590,46,-180)
        jianzu.name='建筑2'
        this.scene.add(jianzu)
        },3000)
        //进水泵
-       this.createModel('/model/jinshuiben.obj','/model/jinshuiben.mtl',{x:-400,y:30,z:-400,scale:0.1,rotateY:Math.PI},'jinshuiben')
+       this.createModel('/model/jinshuiben.obj','/model/jinshuiben.mtl',{x:-400,y:50,z:-400,scale:0.1,rotateY:Math.PI},'jinshuiben')
              //冷却塔
-      this.createModel('/model/lengqueta.obj','/model/lengqueta.mtl',{x:0,y:30,z:0,scale:0.1},'lengqueta')
+      this.createModel('/model/lengqueta.obj','/model/lengqueta.mtl',{x:0,y:50,z:0,scale:0.1},'lengqueta')
 
          //MBR
-       this.createModel('/model/MBR.obj','/model/MBR.mtl',{x:-400,y:30,z:-200,scale:0.1,rotateY:Math.PI},'MBR') 
+       this.createModel('/model/MBR.obj','/model/MBR.mtl',{x:-400,y:50,z:-200,scale:0.1,rotateY:Math.PI},'MBR') 
        //纳滤新
-       this.createModel('/model/nalvnew.obj','/model/nalvnew.mtl',{x:-400,y:30,z:0,scale:0.1,rotateY:Math.PI},'nalvnew')
+       this.createModel('/model/nalvnew.obj','/model/nalvnew.mtl',{x:-400,y:50,z:0,scale:0.1,rotateY:Math.PI},'nalvnew')
 
         //轻量化超滤
-       this.createModel('/model/qinglianghuachaolv.obj','/model/qinglianghuachaolv.mtl',{x:-400,y:30,z:200,scale:0.1,rotateY:Math.PI},'qinglianghuachaolv')
+       this.createModel('/model/qinglianghuachaolv.obj','/model/qinglianghuachaolv.mtl',{x:-400,y:50,z:200,scale:0.1,rotateY:Math.PI},'qinglianghuachaolv')
 
 
        //轻量化超滤
-       this.createModel('/model/qinglianghuachaolv.obj','/model/qinglianghuachaolv.mtl',{x:-400,y:30,z:200,scale:0.1,rotateY:Math.PI},'qinglianghuachaolv')
+       this.createModel('/model/qinglianghuachaolv.obj','/model/qinglianghuachaolv.mtl',{x:-400,y:50,z:200,scale:0.1,rotateY:Math.PI},'qinglianghuachaolv')
 
 
       // 清液池子
-      this.createModel('/model/qingyechi.obj','/model/qingyechi.mtl',{x:430,y:30,z:400,scale:0.1},'qingyechi')
+      this.createModel('/model/qingyechi.obj','/model/qingyechi.mtl',{x:623,y:46,z:330,scale:0.1},'qingyechi')
 
 
       
       // 清液罐
-      this.createModel('/model/qingyeguan.obj','/model/qingyeguan.mtl',{x:230,y:30,z:600,scale:0.1},'qingyeguan')
+      this.createModel('/model/qingyeguan.obj','/model/qingyeguan.mtl',{x:230,y:50,z:600,scale:0.1},'qingyeguan')
 
 
       // 射流泵
-      this.createModel('/model/sheliubeng.obj','/model/sheliubeng.mtl',{x:230,y:30,z:400,scale:0.1},'sheliubeng')
+      this.createModel('/model/sheliubeng.obj','/model/sheliubeng.mtl',{x:230,y:50,z:400,scale:0.1},'sheliubeng')
 
         // 超滤
-      this.createModel('/model/ultrafiltration.obj','/model/ultrafiltration.mtl',{x:230,y:30,z:100,scale:0.1},'ultrafiltration')
+      this.createModel('/model/ultrafiltration.obj','/model/ultrafiltration.mtl',{x:230,y:50,z:-500,scale:0.1},'ultrafiltration')
 
 
 
@@ -97,8 +99,8 @@ export default {
         let floorMaterial=new THREE.MeshLambertMaterial({
               map:texture,
               side:THREE.DoubleSide,
-              transparent:true,
-              opacity:0.7,
+              // transparent:true,
+              // opacity:0.7,
               emissive: '#081838',
               emissiveIntensity: 0.15,
 
@@ -142,13 +144,13 @@ export default {
       let innerWidth=container.clientWidth
       let innerHeigt=container.clientHeight 
       this.camera = new THREE.PerspectiveCamera(45, innerHeigt / innerWidth, 1, 10000 );
-      this.camera.position.set(0, 600, 750);
+      this.camera.position.set(0, 800, 800);
       
       this.scene = new THREE.Scene();
     },
     initControl(){//渲染鼠标事件
       this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-      this.controls.addEventListener('change', this.render)
+     // this.controls.addEventListener('change', this.render)
     },
     initRender(){///初始化渲染器
       let container = document.getElementById('three_content');
@@ -163,7 +165,7 @@ export default {
     render(){///重新渲染
       this.renderer.render(this.scene, this.camera);
       this.stats.update()
-     // requestAnimationFrame(this.render)
+      requestAnimationFrame(this.render)
     },
     initLight(){
        let directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.15);//模拟远处类似太阳的光源
@@ -231,7 +233,32 @@ export default {
 
 
     },
-  
+    onMouseClick( event ) {///鼠标点击时间
+
+        //通过鼠标点击的位置计算出raycaster所需要的点的位置，以屏幕中心为原点，值的范围为-1到1.
+
+        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+        // 通过鼠标点的位置和当前相机的矩阵计算出raycaster
+        raycaster.setFromCamera( mouse, this.camera );
+
+        // 获取raycaster直线和所有模型相交的数组集合
+        var intersects = raycaster.intersectObjects( this.scene.children , true);
+
+        console.log(intersects);
+
+        //将所有的相交的模型的颜色设置为红色，如果只需要将第一个触发事件，那就数组的第一个模型改变颜色即可
+        for ( var i = 0; i < intersects.length; i++ ) {
+
+           if(intersects[i].object.name) {
+            intersects[i].object.material.color.set( 0xff0000 );
+           }
+            
+
+        }
+
+    }
   }
 }
 </script>
