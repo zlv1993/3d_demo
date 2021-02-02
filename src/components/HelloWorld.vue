@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
 import * as dat from 'dat.gui';
+import Stats from 'stats.js'
 
 
 export default {
@@ -16,6 +17,7 @@ export default {
       camera:'',
       scene:'',
       renderer:'',
+      stats :'',
       contorls:null
     }
   },
@@ -29,7 +31,9 @@ export default {
       this.initAxis()
       this.initRender()
       this.createFloor()
+      //冷却塔
       this.createModel('/model/lengqueta.obj','/model/lengqueta.mtl',{x:0,y:30,z:0,scale:0.1},'lengqueta')
+      //生化罐
       this.createModel('/model/biochemicalTank.obj','/model/biochemicalTank.mtl',{x:0,y:76,z:-100,scale:0.05},'biochemicalTank')
       this.render()
       this.initControl()
@@ -55,9 +59,18 @@ export default {
 
     },
 
-    initAxis(){///添加辅助
+    initAxis(){
+      ///添加辅助
      let axis=new THREE.AxisHelper(500)
      this.scene.add(axis)
+
+     //状态值
+     let stats=new Stats();
+     stats.domElement.style.position = 'absolute'; //绝对坐标  
+     stats.domElement.style.left = '0px';// (0,0)px,左上角  
+     stats.domElement.style.top = '0px';  
+     document.getElementById('three_content').appendChild(stats.domElement);  
+     this.stats=stats
      const params={
        x:0,
        y:50,
@@ -96,6 +109,7 @@ export default {
     },
     render(){///重新渲染
       this.renderer.render(this.scene, this.camera);
+      this.stats.update()
       requestAnimationFrame(this.render)
     },
     initLight(){
