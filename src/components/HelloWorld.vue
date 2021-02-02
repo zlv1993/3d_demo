@@ -5,10 +5,12 @@
 <script>
 import * as THREE from 'three';
  import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
- import { OBJLoader, MTLLoader } from 'three-obj-mtl-loader'
-import func from '../../vue-temp/vue-editor-bridge';
-export default {
+import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
+import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
+import * as dat from 'dat.gui';
 
+
+export default {
   data(){
     return {
       camera:'',
@@ -22,43 +24,81 @@ export default {
   },
   methods:{
     init() {
+      this.initScene()
+      this.initLight()
+      this.initAxis()
+      this.initRender()
+      this.createFloor()
+      this.createModel('/model/lengqueta.obj','/model/lengqueta.mtl',{x:0,y:30,z:0,scale:0.1},'lengqueta')
+      this.createModel('/model/biochemicalTank.obj','/model/biochemicalTank.mtl',{x:0,y:76,z:-100,scale:0.05},'biochemicalTank')
+      this.render()
+      this.initControl()
+    },
+    createFloor(){//创建地板
+      let floor=new THREE.PlaneGeometry(1000,1000,10,10)
+      let textLoader=new THREE.TextureLoader()
+      textLoader.load('/img/back.jpg',(texture)=>{
+        texture.wrapS=texture.wrapT=THREE.RepeatWrapping
+        texture.repeat.set(5,5)
+        let floorMaterial=new THREE.MeshLambertMaterial({
+              map:texture,
+              side:THREE.DoubleSide,
+              transparent:true,
+              opacity:0.7
+         })
+         let mesh=new THREE.Mesh(floor,floorMaterial)
+         mesh.receiveShadow=true
+         mesh.rotation.x=Math.PI/2
+         this.scene.add(mesh)
+      })
+      
 
+    },
+
+    initAxis(){///添加辅助
+     let axis=new THREE.AxisHelper(500)
+     this.scene.add(axis)
+     const params={
+       x:0,
+       y:50,
+       z:0
+     }
+     const gui = new dat.GUI();
+       gui.add(params, 'y', 50, 100)
+        .onChange( (val)=> {
+          let mesh=this.scene.getObjectByName ( "biochemicalTank" );
+          mesh.position.y=val
+       });
+
+    },
+    initScene(){//渲染场景
       let container = document.getElementById('three_content');
-            
       let innerWidth=container.clientWidth
       let innerHeigt=container.clientHeight 
-      this.camera = new THREE.PerspectiveCamera( 70, innerHeigt / innerWidth, 0.01, 10000 );
-      this.camera.position.set(300, 300, 300);
+      this.camera = new THREE.PerspectiveCamera(45, innerHeigt / innerWidth, 1, 5000 );
+      this.camera.position.set(300, 400, 500);
       
       this.scene = new THREE.Scene();
-      this.light()
-
-      let geometry = new THREE.BoxGeometry( 100, 100, 100 );
-      let material = new THREE.MeshNormalMaterial({
-        color: 0x0000ff
-      });
-
-      let  mesh = new THREE.Mesh( geometry, material );
-      this.scene.add( mesh );
-      this.renderer = new THREE.WebGLRenderer( );
-      this.renderer.setSize( innerWidth, innerHeigt );
-      this.renderer.setClearColor(0xb9d3ff, 1)
-      this.camera.lookAt(this.scene.position)
-      console.log(this.scene)
-      container.appendChild(this.renderer.domElement);
-      this.createModel('/src/static/jianzu/jianzhu.obj','/src/static/jianzu/jianzhu.mtl','build')
-      this.render()
+    },
+    initControl(){//渲染鼠标事件
       this.controls = new OrbitControls(this.camera, this.renderer.domElement)
       this.controls.addEventListener('change', this.render)
     },
-    initScene(){
-
+    initRender(){///初始化渲染器
+      let container = document.getElementById('three_content');
+      let innerWidth=container.clientWidth
+      let innerHeigt=container.clientHeight 
+       this.renderer = new THREE.WebGLRenderer( );
+      this.renderer.setSize( innerWidth, innerHeigt );
+      this.renderer.setClearColor(0xb9d3ff, 1)
+      this.camera.lookAt(this.scene.position)
+      container.appendChild(this.renderer.domElement);
     },
-    render(){
+    render(){///重新渲染
       this.renderer.render(this.scene, this.camera);
       requestAnimationFrame(this.render)
     },
-    light(){
+    initLight(){
        let  ambient = new THREE.AmbientLight(0xffffff);
        this.scene.add(ambient);//环境光对象添加到scene场景中
 
@@ -66,17 +106,22 @@ export default {
         point.position.set(400, 200, 300); //点光源位置
        this.scene.add(point); //点光源添加到场景中
     },
-    async createModel(objUrl,mtlUrl,name){
+    async createModel(objUrl,mtlUrl,params,name){
        let objLoader=  new OBJLoader();
        let mtlLoader=  new MTLLoader()
-       await mtlLoader.load(objUrl,(material)=>{
+       await mtlLoader.load(mtlUrl,(material)=>{
           objLoader.setMaterials(material)
-       })
-       await objLoader.load(mtlUrl,(mesh)=>{
-         mesh.name=name
-        this.scene.add(mesh)
-       })
 
+       })
+       await   objLoader.load(objUrl,(mesh)=>{
+               mesh.name=name
+               let scale=params.scale
+               mesh.scale.set(scale,scale,scale)
+               mesh.position.x=params.x
+               mesh.position.y=params.y
+              mesh.position.z=params.z
+              this.scene.add(mesh)
+          })
 
     }
 
