@@ -9,9 +9,17 @@ import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
 import * as dat from 'dat.gui';
 import Stats from 'stats.js'
-
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+var params={
+       x:0,
+       y:50,
+       z:0
+ }
+const gui = new dat.GUI();
+
+
+
 export default {
   data(){
     return {
@@ -19,7 +27,8 @@ export default {
       scene:'',
       renderer:'',
       stats :'',
-      contorls:null
+      contorls:null,
+       selectMeshName:''//选中的设备name
     }
   },
   mounted(){
@@ -71,7 +80,7 @@ export default {
       this.createModel('/model/qingyechi.obj','/model/qingyechi.mtl',{x:623,y:46,z:330,scale:0.1},'qingyechi')
 
 
-      
+  
       // 清液罐
       this.createModel('/model/qingyeguan.obj','/model/qingyeguan.mtl',{x:230,y:50,z:600,scale:0.1},'qingyeguan')
 
@@ -126,17 +135,23 @@ export default {
      stats.domElement.style.top = '0px';  
      document.getElementById('three_content').appendChild(stats.domElement);  
      this.stats=stats
-     const params={
-       x:0,
-       y:50,
-       z:0
-     }
-     const gui = new dat.GUI();
-       gui.add(params, 'y', 50, 100)
-        .onChange( (val)=> {
-          let mesh=this.scene.getObjectByName ( "biochemicalTank" );
-          mesh.position.y=val
-       });
+
+      gui.add(params, 'x', -1500, 1500)
+          .onChange( (val)=> {
+                let mesh=this.scene.getObjectByName(this.selectMeshName);
+                mesh.position.x=val
+      });
+      gui.add(params, 'y', -1500, 1500)
+          .onChange( (val)=> {
+                let mesh=this.scene.getObjectByName(this.selectMeshName);
+                mesh.position.y=val
+      });
+        gui.add(params, 'z', -1500, 1500)
+          .onChange( (val)=> {
+                let mesh=this.scene.getObjectByName(this.selectMeshName);
+                mesh.position.z=val
+      });
+      
 
     },
     initScene(){//渲染场景
@@ -246,12 +261,16 @@ export default {
         // 获取raycaster直线和所有模型相交的数组集合
         var intersects = raycaster.intersectObjects( this.scene.children , true);
 
-        console.log(intersects);
-
         //将所有的相交的模型的颜色设置为红色，如果只需要将第一个触发事件，那就数组的第一个模型改变颜色即可
         for ( var i = 0; i < intersects.length; i++ ) {
-
-           if(intersects[i].object.name) {
+          let selectName= intersects[i].object.parent.name
+           if(selectName) {
+            let groupMsg=intersects[i].object.parent
+            console.log(groupMsg.position.x)
+            //  params.position.x=groupMsg.position.x
+            //  params.position.y=groupMsg.position.y
+            //  params.position.z=groupMsg.position.z
+             this.selectMeshName=selectName
             intersects[i].object.material.color.set( 0xff0000 );
            }
             
