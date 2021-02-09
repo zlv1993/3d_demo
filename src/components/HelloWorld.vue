@@ -4,9 +4,13 @@
 
 <script>
 import * as THREE from 'three';
- import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
+import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader'
+const TWEEN = require('@tweenjs/tween.js')
+import {initLine,waterAnimate}  from '../assets/tube'
+import {canvasPlan,canvasImg}  from '../assets/canvas'
 import * as dat from 'dat.gui';
 import Stats from 'stats.js'
 const raycaster = new THREE.Raycaster();
@@ -18,8 +22,6 @@ var params={
  }
 const gui = new dat.GUI();
 
-
-
 export default {
   data(){
     return {
@@ -28,79 +30,85 @@ export default {
       renderer:'',
       stats :'',
       contorls:null,
-       selectMeshName:''//选中的设备name
+       selectMeshName:'',//选中的设备name
     }
   },
   mounted(){
+
     this.init()
+        const position={x: -1570,y:300,z:0}
+        var target = { x :-800, y: 300,z:-800}; 
+    var target2 = { x : -300, y: 300,z:-400};  
+    let tween=new TWEEN.Tween(position).delay(5000).to(target, 10000).to(target2, 10000).easing(TWEEN.Easing.Linear.None).start() 
+    tween.onUpdate((obj)=> {
+      this.camera.position.x=obj.x
+      this.camera.position.y=obj.y
+      this.camera.position.z=obj.z
+       this.camera.lookAt(this.scene.position)
+
+    });
     window.addEventListener( 'click', this.onMouseClick, false );
   },
   methods:{
-    init() {
+   async  init() {
       this.initScene()
       this.initLight()
       this.initAxis()
       this.initRender()
       this.createFloor()
+     // this.createObjModel('/model/sheliubeng3D.obj','/model/sheliubeng3D.mtl',{x:0,y:0,z:0,scale:0.1},'sheliubeng3D')
+      this.createObjModel('/model/jianzhuwu3D.obj','/model/jianzhuwu3D.mtl',{x:600,y:41,z:-475,scale:0.1,rotateY:Math.PI},'jianzhuwu3D')
+      this.createObjModel('/model/jianzhuwu3D.obj','/model/jianzhuwu3D.mtl',{x:600,y:41,z:-200,scale:0.1,rotateY:Math.PI},'jianzhuwu3D2')
+    //  池子
+     this.createObjModel('/model/chizi3D.obj','/model/chizi3D.mtl',{x:632,y:41,z:300,scale:0.1,rotateY:Math.PI},'chizi3D')
 
-     //生化罐
-      this.createModel('/model/biochemicalTank.obj','/model/biochemicalTank.mtl',{x:0,y:50,z:-100,scale:0.05},'biochemicalTank')
-
-      // 鼓风机
-      this.createModel('/model/gufengji.obj','/model/gufengji.mtl',{x:140,y:50,z:0,scale:0.1},'gufengji')
-
-      //建筑
-       this.createModel('/model/jianzhu.obj','/model/jianzhu.mtl',{x:590,y:46,z:-490,scale:0.1,rotateY:Math.PI},'jianzu')
+    
+       //超滤
+       this.createObjModel('/model/chaolv3D.obj','/model/chaolv3D.mtl',{x:200,y:78,z:-560,scale:0.1},'chaolv3D')
+       this.createObjModel('/model/chaolv3D.obj','/model/chaolv3D.mtl',{x:200,y:78,z:-410,scale:0.1},'chaolv3D2'
        
-       setTimeout(()=>{  
-       let jianzu =this.scene.getObjectByName("jianzu").clone()
-       jianzu.position.set(590,46,-180)
-       jianzu.name='建筑2'
-       this.scene.add(jianzu)
-       },3000)
-       //进水泵
-       this.createModel('/model/jinshuiben.obj','/model/jinshuiben.mtl',{x:-400,y:50,z:-400,scale:0.1,rotateY:Math.PI},'jinshuiben')
-             //冷却塔
-      this.createModel('/model/lengqueta.obj','/model/lengqueta.mtl',{x:0,y:50,z:0,scale:0.1},'lengqueta')
+       
+       )
+       //设射流泵
+     this.createObjModel('/model/sheliubeng3D.obj','/model/sheliubeng3D.mtl',{x:60,y:18,z:-220,scale:0.1},'sheliubeng3D')
+     this.createObjModel('/model/sheliubeng3D.obj','/model/sheliubeng3D.mtl',{x:60,y:18,z:-160,scale:0.1},'sheliubeng3D2')
+     this.createObjModel('/model/sheliubeng3D.obj','/model/sheliubeng3D.mtl',{x:60,y:18,z:285,scale:0.1},'sheliubeng3D2')
+      this.createObjModel('/model/sheliubeng3D.obj','/model/sheliubeng3D.mtl',{x:60,y:18,z:365,scale:0.1},'sheliubeng3D2')
 
-         //MBR
-       this.createModel('/model/MBR.obj','/model/MBR.mtl',{x:-400,y:50,z:-200,scale:0.1,rotateY:Math.PI},'MBR') 
-       //纳滤新
-       this.createModel('/model/nalvnew.obj','/model/nalvnew.mtl',{x:-400,y:50,z:0,scale:0.1,rotateY:Math.PI},'nalvnew')
+//罐子
+      this.createObjModel('/model/qingyeguan3D.obj','/model/qingyeguan3D.mtl',{x:280,y:78,z:-200,scale:0.1},'qingyeguan3D')
 
-        //轻量化超滤
-       this.createModel('/model/qinglianghuachaolv.obj','/model/qinglianghuachaolv.mtl',{x:-400,y:50,z:200,scale:0.1,rotateY:Math.PI},'qinglianghuachaolv')
+      this.createObjModel('/model/nalvfanshentou3D.obj','/model/nalvfanshentou3D.mtl',{x:200,y:58,z:10,scale:0.1,rotateY:Math.PI},'nalvfanshentou3D')
+       this.createObjModel('/model/nalvfanshentou3D.obj','/model/nalvfanshentou3D.mtl',{x:200,y:58,z:160,scale:0.1,rotateY:Math.PI},'nalvfanshentou3D')
+       
 
+        this.createObjModel('/model/qingyeguan3D.obj','/model/qingyeguan3D.mtl',{x:280,y:78,z:300,scale:0.1},'qingyeguan3D')
 
-       //轻量化超滤
-       this.createModel('/model/qinglianghuachaolv.obj','/model/qinglianghuachaolv.mtl',{x:-400,y:50,z:200,scale:0.1,rotateY:Math.PI},'qinglianghuachaolv')
+        
+      this.createObjModel('/model/nalvfanshentou3D.obj','/model/nalvfanshentou3D.mtl',{x:200,y:58,z:450,scale:0.1,rotateY:Math.PI},'nalvfanshentou3D')
+       this.createObjModel('/model/nalvfanshentou3D.obj','/model/nalvfanshentou3D.mtl',{x:200,y:58,z:600,scale:0.1,rotateY:Math.PI},'nalvfanshentou3D')
+      //this.createDracolModel('/model/MBRjinshuibeng3D.drc','/MBRjinshuibeng3D.mtl',{x:0,y:0,z:0,scale:0.1},'MBRjinshuibeng3D')
 
+       //冷却塔
+         this.createObjModel('/model/lengqueta3.obj','/model/lengqueta3.mtl',{x:-370,y:35,z:-530,scale:0.1,rotateY:Math.PI},'nalvfanshentou3D')
+       //罐子
+      this.createObjModel('/model/qingyeguan3D.obj','/model/qingyeguan3D.mtl',{x:-350,y:76,z:-400,scale:0.1},'qingyeguan3D')
+       this.createObjModel('/model/qingyeguan3D.obj','/model/qingyeguan3D.mtl',{x:-350,y:76,z:-200,scale:0.1},'qingyeguan3D')
+       this.createObjModel('/model/qingyeguan3D.obj','/model/qingyeguan3D.mtl',{x:-350,y:149,z:100,scale:0.2},'qingyeguan3D')
+           this.createObjModel('/model/qingyeguan3D.obj','/model/qingyeguan3D.mtl',{x:-350,y:149,z:450,scale:0.2},'qingyeguan3D')
+          //  冷却塔
 
-      // 清液池子
-      this.createModel('/model/qingyechi.obj','/model/qingyechi.mtl',{x:623,y:46,z:330,scale:0.1},'qingyechi')
-
-
-  
-      // 清液罐
-      this.createModel('/model/qingyeguan.obj','/model/qingyeguan.mtl',{x:230,y:50,z:600,scale:0.1},'qingyeguan')
-
-
-      // 射流泵
-      this.createModel('/model/sheliubeng.obj','/model/sheliubeng.mtl',{x:230,y:50,z:400,scale:0.1},'sheliubeng')
-
-        // 超滤
-      this.createModel('/model/ultrafiltration.obj','/model/ultrafiltration.mtl',{x:230,y:50,z:-500,scale:0.1},'ultrafiltration')
-
-
-
-
-
-
+        this.createObjModel('/model/lengqueta3.obj','/model/lengqueta3.mtl',{x:-450,y:35,z:-40,scale:0.1,rotateY:Math.PI},'nalvfanshentou3D')
+               //  池子
+      this.createObjModel('/model/chizi3D.obj','/model/chizi3D.mtl',{x:-850,y:42,z:0,scale:0.1,rotateY:Math.PI},'chizi3D')
+      initLine(this.scene)
+      canvasPlan(this.scene)
+      canvasImg(this.scene)
       this.render()
       this.initControl()
     },
     createFloor(){//创建地板
-      let floor=new THREE.PlaneGeometry(3500,2000,30)
+      let floor=new THREE.PlaneGeometry(3500,2000,32)
       let textLoader=new THREE.TextureLoader()
       textLoader.load('/img/back.jpg',(texture)=>{
         texture.wrapS=texture.wrapT=THREE.RepeatWrapping
@@ -158,9 +166,8 @@ export default {
       let container = document.getElementById('three_content');
       let innerWidth=container.clientWidth
       let innerHeigt=container.clientHeight 
-      this.camera = new THREE.PerspectiveCamera(45, innerHeigt / innerWidth, 1, 10000 );
-      this.camera.position.set(0, 800, 800);
-      
+      this.camera = new THREE.PerspectiveCamera(45, innerWidth /innerHeigt , 1, 100000 );
+      this.camera.position.set(-1570, 300, 0); 
       this.scene = new THREE.Scene();
     },
     initControl(){//渲染鼠标事件
@@ -171,7 +178,8 @@ export default {
       let container = document.getElementById('three_content');
       let innerWidth=container.clientWidth
       let innerHeigt=container.clientHeight 
-       this.renderer = new THREE.WebGLRenderer( );
+      this.renderer = new THREE.WebGLRenderer({antialias: true});
+      this.renderer.setPixelRatio(window.devicePixelRatio);
       this.renderer.setSize( innerWidth, innerHeigt );
       this.renderer.setClearColor(0xb9d3ff, 1)
       this.camera.lookAt(this.scene.position)
@@ -180,6 +188,8 @@ export default {
     render(){///重新渲染
       this.renderer.render(this.scene, this.camera);
       this.stats.update()
+      TWEEN.update()
+      waterAnimate()
       requestAnimationFrame(this.render)
     },
     initLight(){
@@ -226,7 +236,7 @@ export default {
             ambient.position.set(0, 0, 0);
             this.scene.add(ambient);
     },
-     createModel(objUrl,mtlUrl,params,name){
+     createObjModel(objUrl,mtlUrl,params,name){///创建obj模型跟材质
        let objLoader=  new OBJLoader();
        let mtlLoader=  new MTLLoader()
         mtlLoader.load(mtlUrl,(material)=>{
@@ -248,6 +258,40 @@ export default {
 
 
     },
+     createDracolModel(drcUrl,mtlUrl,params,name){///创建模型跟材质
+    let dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('/model//libs/draco/');
+    dracoLoader.preload();
+     dracoLoader.load( drcUrl, (geometry)=> {
+            let mtlLoader = new MTLLoader();
+            mtlLoader.setPath('obj/');
+            mtlLoader.load(mtlUrl,  (materials)=> {
+                materials.preload();
+                let material = [];
+
+
+                let mesh = new THREE.Mesh(geometry, materials.materials['lansecaizhi']);
+                mesh.name = '1#生化进水泵,2#生化进水泵';
+                mesh.clickId = '3'
+                mesh.scale.set(0.1, 0.1, 0.1)
+                mesh.rotateY(Math.PI)
+                mesh.position.y = 18
+                mesh.position.z = 500
+                mesh.position.x = -500
+                this.scene.add(mesh);
+          
+            });
+
+
+
+        }
+    );
+
+
+
+
+    },
+
     onMouseClick( event ) {///鼠标点击时间
 
         //通过鼠标点击的位置计算出raycaster所需要的点的位置，以屏幕中心为原点，值的范围为-1到1.
@@ -271,7 +315,7 @@ export default {
             //  params.position.y=groupMsg.position.y
             //  params.position.z=groupMsg.position.z
              this.selectMeshName=selectName
-            intersects[i].object.material.color.set( 0xff0000 );
+           /// intersects[i].object.material.color.set( 0xff0000 );
            }
             
 
